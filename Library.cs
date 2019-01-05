@@ -40,7 +40,8 @@ namespace MusicBox
 			{
 				string fileName = Path.GetFileName(filePath);
 
-				yield return Path.Combine(relativePath, fileName);
+				if (Player.SupportedExtensions.Contains(Path.GetExtension(fileName)))
+					yield return Path.Combine(relativePath, fileName);
 			}
 
 			foreach (var subdirectoryPath in Directory.GetDirectories(absolutePath))

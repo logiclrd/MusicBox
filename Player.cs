@@ -1,6 +1,6 @@
 ﻿using System;
 using System.IO;
-
+using NAudio.Flac;
 using NAudio.Wave;
 
 using RubberBand.NAudio;
@@ -9,6 +9,8 @@ namespace MusicBox
 {
 	public class Player
 	{
+		public static readonly string[] SupportedExtensions = { ".mp3", ".wav", ".fla", ".flac" };
+
 		public void SelectFile(string fileName)
 		{
 			if (Playing)
@@ -22,6 +24,8 @@ namespace MusicBox
 				_source = new Mp3FileReader(fileName);
 			else if (extension == ".wav")
 				_source = new WaveFileReader(fileName);
+			else if ((extension == ".fla") || (extension == ".flac"))
+				_source = new FlacReader(fileName);
 
 			TotalTimeChanged?.Invoke(this, EventArgs.Empty);
 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
@@ -75,6 +76,12 @@ namespace MusicBox
 					if (!_settingTempo)
 						sTempo.Value = Math.Log(_player.Tempo, newBase: 2.0);
 				};
+
+			this.Playlist = new Playlist();
+
+			_library = new Library(ConfigurationManager.AppSettings["LibraryPath"]);
+
+			UpdateLibrarySearch();
 		}
 
 		static string FormatTimeSpan(TimeSpan span)
@@ -86,6 +93,7 @@ namespace MusicBox
 		}
 
 		Player _player;
+		Library _library;
 		bool _receivingTime;
 		bool _settingTempo;
 
@@ -94,6 +102,14 @@ namespace MusicBox
 
 		Timer _titleScrollAnimationInitiator;
 		DoubleAnimation _titleScrollAnimation;
+
+		public static readonly DependencyProperty PlaylistProperty = DependencyProperty.Register(nameof(Playlist), typeof(Playlist), typeof(MainWindow));
+
+		public Playlist Playlist
+		{
+			get { return (Playlist)GetValue(PlaylistProperty); }
+			set { SetValue(PlaylistProperty, value); }
+		}
 
 		private void lblTitle_MouseDown(object sender, MouseButtonEventArgs e)
 		{
@@ -259,6 +275,12 @@ namespace MusicBox
 			}
 		}
 
+		private void lstPlaylist_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			if (lstPlaylist.SelectedItem is FileReference fileReference)
+				SelectFile(fileReference.FullPath);
+		}
+
 		double _libraryColumnWidthAtMouseDown;
 
 		private void GridSplitter_MouseDown(object sender, MouseButtonEventArgs e)
@@ -313,9 +335,90 @@ namespace MusicBox
 			}
 		}
 
-		private void Label_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+		private void txtLibrarySearch_TextChanged(object sender, TextChangedEventArgs e)
 		{
-			cmdOpen_Click(sender, new RoutedEventArgs());
+			UpdateLibrarySearch();
+		}
+
+		void UpdateLibrarySearch()
+		{
+			string searchText = txtLibrarySearch.Text.Trim();
+
+			bool isEmptySearch = string.IsNullOrWhiteSpace(searchText);
+
+			var rootNodes = new List<SearchResultNode>();
+			var currentNode = new List<(string PathComponent, SearchResultNode Node)>();
+
+			foreach (var result in _library.Search(searchText))
+			{
+				if (result.Components.Count < currentNode.Count)
+					currentNode.RemoveRange(result.Components.Count, currentNode.Count - result.Components.Count);
+
+				for (int i = 0; i < result.Components.Count; i++)
+				{
+					if ((i >= currentNode.Count) || !result.Components[i].Name.Equals(currentNode[i].PathComponent))
+					{
+						var node = new SearchResultNode();
+
+						if (i + 1 == result.Components.Count)
+							node.SearchResult = result;
+
+						node.NodeType = (i + 1 < result.Components.Count) ? SearchResultNodeType.Folder : SearchResultNodeType.File;
+						node.Heading = CreateTextBlockForSearchResultComponent(result.Components[i]);
+						node.IsExpanded = !isEmptySearch;
+
+						if (i == 0)
+							rootNodes.Add(node);
+						else
+						{
+							var parentNode = currentNode[i - 1].Node;
+
+							if (parentNode.ChildNodes == null)
+								parentNode.ChildNodes = new System.Collections.ObjectModel.ObservableCollection<SearchResultNode>();
+
+							parentNode.ChildNodes.Add(node);
+						}
+
+						if (currentNode.Count > i)
+							currentNode.RemoveRange(i, currentNode.Count - i);
+
+						currentNode.Add((result.Components[i].Name, node));
+					}
+				}
+			}
+
+			tvLibrarySearchResults.ItemsSource = rootNodes;
+		}
+
+		TextBlock CreateTextBlockForSearchResultComponent(SearchResultComponent component)
+		{
+			var textBlock = new TextBlock();
+
+			foreach (var segment in component.Segments)
+			{
+				var run = new Run();
+
+				run.FontWeight = (segment.Highlight ? FontWeights.Bold : FontWeights.Normal);
+				run.Text = segment.Text;
+
+				textBlock.Inlines.Add(run);
+			}
+
+			return textBlock;
+		}
+
+		string[] GetPathComponents(string path)
+		{
+			var components = new Stack<string>();
+
+			while (!string.IsNullOrWhiteSpace(path))
+			{
+				components.Push(Path.GetFileName(path));
+
+				path = Path.GetDirectoryName(path);
+			}
+
+			return components.ToArray();
 		}
 
 		void UI(Action action)

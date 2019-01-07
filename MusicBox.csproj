@@ -53,6 +53,7 @@
     <Reference Include="NAudio.Flac, Version=1.0.5702.29018, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\NAudio.Flac.1.0.5702.29018\lib\net45\NAudio.Flac.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationFramework.Aero2" />
     <Reference Include="rubberband-sharp, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\rubberband-sharp.1.0.0\lib\netstandard2.0\rubberband-sharp.dll</HintPath>
     </Reference>
@@ -86,10 +87,17 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="ConfirmDialog.xaml.cs">
+      <DependentUpon>ConfirmDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Curtain.cs" />
     <Compile Include="FileReference.cs" />
     <Compile Include="PlaceholderAdorner.cs" />
     <Compile Include="PlaceholderService.cs" />
     <Compile Include="Playlist.cs" />
+    <Compile Include="PlaylistDialog.xaml.cs">
+      <DependentUpon>PlaylistDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="SearchResult.cs" />
     <Compile Include="SearchResultComponent.cs" />
     <Compile Include="SearchResultComponentSegment.cs" />
@@ -98,6 +106,10 @@
       <DependentUpon>SearchResultNodeIcon.xaml</DependentUpon>
     </Compile>
     <Compile Include="SearchResultNodeType.cs" />
+    <Page Include="ConfirmDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -114,6 +126,10 @@
       <DependentUpon>MainWindow.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Page Include="PlaylistDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="SearchResultNodeIcon.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -15,7 +15,7 @@ namespace MusicBox
 		#region Private Fields
 
 		/// <summary>
-		/// <see cref="ContentPresenter"/> that holds the placeholder
+		/// <see cref="ContentPresenter" /> that holds the placeholder
 		/// </summary>
 		private readonly ContentPresenter contentPresenter;
 
@@ -24,9 +24,9 @@ namespace MusicBox
 		#region Constructor
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="PlaceholderAdorner"/> class
+		/// Initializes a new instance of the <see cref="PlaceholderAdorner" /> class
 		/// </summary>
-		/// <param name="adornedElement"><see cref="UIElement"/> to be adorned</param>
+		/// <param name="adornedElement"><see cref="UIElement" /> to be adorned</param>
 		/// <param name="placeholder">The placeholder</param>
 		public PlaceholderAdorner(UIElement adornedElement, object placeholder)
 			: base(adornedElement)
@@ -60,7 +60,7 @@ namespace MusicBox
 		#region Protected Properties
 
 		/// <summary>
-		/// Gets the number of children for the <see cref="ContainerVisual"/>.
+		/// Gets the number of children for the <see cref="ContainerVisual" />.
 		/// </summary>
 		protected override int VisualChildrenCount
 		{
@@ -84,10 +84,10 @@ namespace MusicBox
 		#region Protected Overrides
 
 		/// <summary>
-		/// Returns a specified child <see cref="Visual"/> for the parent <see cref="ContainerVisual"/>.
+		/// Returns a specified child <see cref="Visual" /> for the parent <see cref="ContainerVisual" />.
 		/// </summary>
-		/// <param name="index">A 32-bit signed integer that represents the index value of the child <see cref="Visual"/>. The value of index must be between 0 and <see cref="VisualChildrenCount"/> - 1.</param>
-		/// <returns>The child <see cref="Visual"/>.</returns>
+		/// <param name="index">A 32-bit signed integer that represents the index value of the child <see cref="Visual" />. The value of index must be between 0 and <see cref="VisualChildrenCount"/> - 1.</param>
+		/// <returns>The child <see cref="Visual" />.</returns>
 		protected override Visual GetVisualChild(int index)
 		{
 			return this.contentPresenter;
@@ -97,7 +97,7 @@ namespace MusicBox
 		/// Implements any custom measuring behavior for the adorner.
 		/// </summary>
 		/// <param name="constraint">A size to constrain the adorner to.</param>
-		/// <returns>A <see cref="Size"/> object representing the amount of layout space needed by the adorner.</returns>
+		/// <returns>A <see cref="Size" /> object representing the amount of layout space needed by the adorner.</returns>
 		protected override Size MeasureOverride(Size constraint)
 		{
 			// Here's the secret to getting the adorner to cover the whole control
@@ -107,7 +107,7 @@ namespace MusicBox
 		}
 
 		/// <summary>
-		/// When overridden in a derived class, positions child elements and determines a size for a <see cref="FrameworkElement"/> derived class. 
+		/// When overridden in a derived class, positions child elements and determines a size for a <see cref="FrameworkElement" /> derived class.
 		/// </summary>
 		/// <param name="finalSize">The final area within the parent that this element should use to arrange itself and its children.</param>
 		/// <returns>The actual size used.</returns>

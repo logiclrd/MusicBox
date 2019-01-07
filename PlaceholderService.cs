@@ -31,7 +31,7 @@ namespace MusicBox
 		/// <summary>
 		/// Gets the Placeholder property.  This dependency property indicates the placeholder for the control.
 		/// </summary>
-		/// <param name="d"><see cref="DependencyObject"/> to get the property from</param>
+		/// <param name="d"><see cref="DependencyObject" /> to get the property from</param>
 		/// <returns>The value of the Placeholder property</returns>
 		public static object GetPlaceholder(DependencyObject d)
 		{
@@ -41,7 +41,7 @@ namespace MusicBox
 		/// <summary>
 		/// Sets the Placeholder property.  This dependency property indicates the placeholder for the control.
 		/// </summary>
-		/// <param name="d"><see cref="DependencyObject"/> to set the property on</param>
+		/// <param name="d"><see cref="DependencyObject" /> to set the property on</param>
 		/// <param name="value">value of the property</param>
 		public static void SetPlaceholder(DependencyObject d, object value)
 		{
@@ -51,8 +51,8 @@ namespace MusicBox
 		/// <summary>
 		/// Handles changes to the Placeholder property.
 		/// </summary>
-		/// <param name="d"><see cref="DependencyObject"/> that fired the event</param>
-		/// <param name="e">A <see cref="DependencyPropertyChangedEventArgs"/> that contains the event data.</param>
+		/// <param name="d"><see cref="DependencyObject" /> that fired the event</param>
+		/// <param name="e">A <see cref="DependencyPropertyChangedEventArgs" /> that contains the event data.</param>
 		private static void OnPlaceholderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
 			Control control = (Control)d;
@@ -89,7 +89,7 @@ namespace MusicBox
 		/// Handle the GotFocus event on the control
 		/// </summary>
 		/// <param name="sender">The source of the event.</param>
-		/// <param name="e">A <see cref="RoutedEventArgs"/> that contains the event data.</param>
+		/// <param name="e">A <see cref="RoutedEventArgs" /> that contains the event data.</param>
 		private static void Control_GotKeyboardFocus(object sender, RoutedEventArgs e)
 		{
 			Control c = (Control)sender;
@@ -104,7 +104,7 @@ namespace MusicBox
 		/// Handle the Loaded and LostFocus event on the control
 		/// </summary>
 		/// <param name="sender">The source of the event.</param>
-		/// <param name="e">A <see cref="RoutedEventArgs"/> that contains the event data.</param>
+		/// <param name="e">A <see cref="RoutedEventArgs" /> that contains the event data.</param>
 		private static void Control_Loaded(object sender, RoutedEventArgs e)
 		{
 			Control control = (Control)sender;
@@ -117,7 +117,7 @@ namespace MusicBox
 		/// Event handler for the items source changed event
 		/// </summary>
 		/// <param name="sender">The source of the event.</param>
-		/// <param name="e">A <see cref="EventArgs"/> that contains the event data.</param>
+		/// <param name="e">A <see cref="EventArgs" /> that contains the event data.</param>
 		private static void ItemsSourceChanged(object sender, EventArgs e)
 		{
 			ItemsControl c = (ItemsControl)sender;
@@ -137,7 +137,7 @@ namespace MusicBox
 		/// Event handler for the items changed event
 		/// </summary>
 		/// <param name="sender">The source of the event.</param>
-		/// <param name="e">A <see cref="ItemsChangedEventArgs"/> that contains the event data.</param>
+		/// <param name="e">A <see cref="ItemsChangedEventArgs" /> that contains the event data.</param>
 		private static void ItemsChanged(object sender, ItemsChangedEventArgs e)
 		{
 			if (itemsControls.TryGetValue(sender, out var control))
@@ -198,7 +198,7 @@ namespace MusicBox
 		/// <summary>
 		/// Indicates whether or not the placeholder should be shown on the specified control
 		/// </summary>
-		/// <param name="c"><see cref="Control"/> to test</param>
+		/// <param name="c"><see cref="Control" /> to test</param>
 		/// <returns>true if the placeholder should be shown; false otherwise</returns>
 		private static bool ShouldShowPlaceholder(Control c)
 		{

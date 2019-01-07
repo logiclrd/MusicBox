@@ -1,21 +1,18 @@
-﻿using Microsoft.Win32;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Configuration;
 using System.IO;
+using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Animation;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
+
+using Microsoft.Win32;
 
 namespace MusicBox
 {
@@ -26,6 +23,12 @@ namespace MusicBox
 	{
 		public MainWindow()
 		{
+			_libraryPath = ConfigurationManager.AppSettings["LibraryPath"];
+			_playlistPath = ConfigurationManager.AppSettings["PlaylistPath"];
+
+			EnsureDirectory(_libraryPath, "find music");
+			EnsureDirectory(_playlistPath, "store dance lists");
+
 			InitializeComponent();
 
 			_titleScrollAnimationInitiator = new Timer();
@@ -79,9 +82,25 @@ namespace MusicBox
 
 			this.Playlist = new Playlist();
 
-			_library = new Library(ConfigurationManager.AppSettings["LibraryPath"]);
+			_library = new Library(_libraryPath);
 
 			UpdateLibrarySearch();
+		}
+
+		void EnsureDirectory(string path, string usage)
+		{
+			if (!Directory.Exists(path))
+			{
+				try
+				{
+					Directory.CreateDirectory(path);
+				}
+				catch
+				{
+					MessageBox.Show($"Configuration problem: Expecting to {usage} in {path}, but that directory does not exist!", "Problem");
+					Environment.Exit(1);
+				}
+			}
 		}
 
 		static string FormatTimeSpan(TimeSpan span)
@@ -92,8 +111,12 @@ namespace MusicBox
 			return minutes + ":" + seconds.ToString("d2");
 		}
 
+		string _libraryPath;
+		string _playlistPath;
+
 		Player _player;
 		Library _library;
+
 		bool _receivingTime;
 		bool _settingTempo;
 
@@ -110,6 +133,8 @@ namespace MusicBox
 			get { return (Playlist)GetValue(PlaylistProperty); }
 			set { SetValue(PlaylistProperty, value); }
 		}
+
+		FileReference _playlistFile;
 
 		private void lblTitle_MouseDown(object sender, MouseButtonEventArgs e)
 		{
@@ -279,6 +304,134 @@ namespace MusicBox
 		{
 			if (lstPlaylist.SelectedItem is FileReference fileReference)
 				SelectFile(fileReference.FullPath);
+		}
+
+		private void cmdClearPlaylist_Click(object sender, RoutedEventArgs e)
+		{
+			this.Playlist.Clear();
+
+			_playlistFile = null;
+		}
+
+		private void cmdSavePlaylist_Click(object sender, RoutedEventArgs e)
+		{
+			var playlistDialog = new PlaylistDialog();
+
+			playlistDialog.LoadPlaylists(Playlist.Enumerate(_playlistPath));
+			playlistDialog.PlaylistFile = _playlistFile;
+
+			playlistDialog.Owner = this;
+
+			playlistDialog.DeleteSelectedPlaylist +=
+				(innerSender, innerE) =>
+				{
+					if ((playlistDialog.PlaylistFile != null)
+					 && File.Exists(playlistDialog.PlaylistFile.FullPath))
+						File.Delete(playlistDialog.PlaylistFile.FullPath);
+				};
+
+			bool? result;
+
+			using (Curtain.ShowCurtain(grdRoot))
+				result = playlistDialog.ShowDialog();
+
+			if (result ?? false)
+			{
+				_playlistFile = playlistDialog.PlaylistFile;
+
+				if (_playlistFile.FullPath == null)
+				{
+					var sanitizedName = SanitizeFileName(_playlistFile.FileName);
+
+					if (sanitizedName.Length == 0)
+						sanitizedName = "Playlist";
+
+					_playlistFile.FullPath = Path.Combine(_playlistPath, sanitizedName + ".playlist");
+
+					int index = 1;
+
+					while (File.Exists(_playlistFile.FullPath))
+					{
+						index++;
+						_playlistFile.FullPath = Path.Combine(_playlistPath, sanitizedName + "-" + index + ".playlist");
+					}
+				}
+
+				this.Playlist.Name = _playlistFile.FileName;
+				this.Playlist.Save(_playlistFile);
+			}
+		}
+
+		private string SanitizeFileName(string itemName)
+		{
+			var fileNameBuffer = new StringBuilder();
+
+			itemName = itemName.TrimStart().TrimEnd(new[] { ' ', '.' });
+
+			for (int i=0; i < itemName.Length; i++)
+			{
+				var ch = itemName[i];
+
+				switch (ch)
+				{
+					case '<': ch = '('; break;
+					case '>': ch = ')'; break;
+					case ':': ch = ','; break;
+					case '"': ch = '\''; break;
+					case '/': ch = ','; break;
+					case '\\': ch = ','; break;
+					case '|': ch = ','; break;
+					case '?': ch = '_'; break;
+					case '*': ch = '_'; break;
+				}
+
+				if (ch < 32)
+					ch = '_';
+
+				fileNameBuffer.Append(ch);
+			}
+
+			string fileName = fileNameBuffer.ToString();
+
+			if (ReservedFileNames.Contains(fileName))
+				fileName += "_1";
+
+			if (fileName.Length > 240)
+				fileName = fileName.Substring(0, 240);
+
+			return fileName;
+		}
+
+		static readonly HashSet<string> ReservedFileNames = new HashSet<string>(
+			new[]
+			{
+				"CON", "PRN", "AUX", "NUL",
+				"COM0", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
+				"LPT0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
+			},
+			StringComparer.InvariantCultureIgnoreCase);
+
+		private void cboSavedPlaylists_DropDownOpened(object sender, EventArgs e)
+		{
+			string playlistDirectory = ConfigurationManager.AppSettings["PlaylistPath"];
+
+			List<FileReference> playlists = Playlist.Enumerate(playlistDirectory).ToList();
+
+			playlists.Sort((l, r) => string.Compare(l.FileName, r.FileName, StringComparison.InvariantCultureIgnoreCase));
+
+			if (playlists.Count == 0)
+				playlists.Add(new FileReference() { FileName = "No saved dance lists." });
+
+			cboSavedPlaylists.SelectedIndex = -1;
+			cboSavedPlaylists.ItemsSource = playlists;
+		}
+
+		private void cboSavedPlaylists_SelectionChanged(object sender, SelectionChangedEventArgs e)
+		{
+			_playlistFile = cboSavedPlaylists.SelectedItem as FileReference;
+
+			if (_playlistFile != null)
+				this.Playlist = Playlist.Load(_playlistFile);
 		}
 
 		double _libraryColumnWidthAtMouseDown;

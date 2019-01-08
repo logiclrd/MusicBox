@@ -4,7 +4,8 @@
         xmlns:local="clr-namespace:MusicBox"
         xmlns:dd="urn:gong-wpf-dragdrop"
         xmlns:Themes="clr-namespace:Microsoft.Windows.Themes;assembly=PresentationFramework.Aero2"
-        ResizeMode="NoResize" WindowStyle="None" WindowState="Maximized" Background="Black">
+        ResizeMode="NoResize" WindowStyle="None" WindowState="Maximized" Background="Black"
+        Icon="ApplicationIcon.ico">
     <Viewbox>
         <Grid Width="1366" Height="768" Background="#35A" Name="grdRoot">
             <Grid.ColumnDefinitions>
@@ -37,6 +38,39 @@
                         </Label.Template>
                     </Label>
                 </ScrollViewer>
+
+                <Button Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top" Name="cmdExit" Cursor="Hand" Click="cmdExit_Click">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <StackPanel Grid.Row="0" HorizontalAlignment="Right" VerticalAlignment="Top" ClipToBounds="True" Background="#01000000" Orientation="Horizontal">
+                                <Grid ClipToBounds="True">
+                                    <Label FontSize="24" Content="Close Application" Name="lblCloseApplication" Foreground="#BDF" VerticalAlignment="Center">
+                                        <Label.RenderTransform>
+                                            <TranslateTransform x:Name="ttHideCloseApplication" X="{Binding ElementName=lblCloseApplication, Path=ActualWidth}" />
+                                        </Label.RenderTransform>
+                                    </Label>
+                                </Grid>
+                                <Path Fill="#BDF" Data="M0 0 L2 0 12 10 22 0 24 0 24 2 14 12 24 22 24 24 22 24 12 14 2 24 0 24 0 22 10 12 0 2 z" VerticalAlignment="Center" />
+                            </StackPanel>
+                            <ControlTemplate.Triggers>
+                                <EventTrigger RoutedEvent="MouseEnter">
+                                    <BeginStoryboard>
+                                        <Storyboard Duration="00:00:00.25">
+                                            <DoubleAnimation Duration="00:00:00.25" Storyboard.TargetName="ttHideCloseApplication" Storyboard.TargetProperty="X" To="0" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                                <EventTrigger RoutedEvent="MouseLeave">
+                                    <BeginStoryboard>
+                                        <Storyboard Duration="00:00:00.25">
+                                            <DoubleAnimation Duration="00:00:00.25" Storyboard.TargetName="ttHideCloseApplication" Storyboard.TargetProperty="X" From="0" />
+                                        </Storyboard>
+                                    </BeginStoryboard>
+                                </EventTrigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
 
                 <Grid Grid.Row="2">
                     <Grid.ColumnDefinitions>

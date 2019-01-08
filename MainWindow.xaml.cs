@@ -182,6 +182,11 @@ namespace MusicBox
 			}
 		}
 
+		private void cmdExit_Click(object sender, RoutedEventArgs e)
+		{
+			Application.Current.Shutdown();
+		}
+
 		void SelectFile(string fileName)
 		{
 			_player.SelectFile(fileName);

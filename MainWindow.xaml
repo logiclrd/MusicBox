@@ -393,7 +393,8 @@
                              FontSize="24"
                              Foreground="#DCA"
                              SelectionMode="Single"
-                             SelectionChanged="lstPlaylist_SelectionChanged">
+                             SelectionChanged="lstPlaylist_SelectionChanged"
+                             ManipulationBoundaryFeedback="lstPlaylist_ManipulationBoundaryFeedback">
                         <ListBox.Resources>
                             <SolidColorBrush x:Key="ScrollBar.Pressed" Color="#863" />
                             <SolidColorBrush x:Key="ScrollBar.MouseOver" Color="#974" />
@@ -424,7 +425,7 @@
                         <TextBlock FontSize="24" FontStyle="Italic" Opacity="0.8">Type to search</TextBlock>
                     </local:PlaceholderService.Placeholder>
                 </TextBox>
-                <TreeView Name="tvLibrarySearchResults" FontSize="24" BorderThickness="0" Background="#BCF" Foreground="#FF212D5F" dd:DragDrop.IsDragSource="True">
+                <TreeView Name="tvLibrarySearchResults" FontSize="24" BorderThickness="0" Background="#BCF" Foreground="#FF212D5F" dd:DragDrop.IsDragSource="True" SelectedItemChanged="tvLibrarySearchResults_SelectedItemChanged" ManipulationBoundaryFeedback="tvLibrarySearchResults_ManipulationBoundaryFeedback">
                     <TreeView.Resources>
                         <SolidColorBrush x:Key="ScrollBar.Pressed" Color="#35A" />
                         <SolidColorBrush x:Key="ScrollBar.MouseOver" Color="#79E" />

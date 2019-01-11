@@ -296,7 +296,38 @@ namespace MusicBox
 		private void lstPlaylist_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			if (lstPlaylist.SelectedItem is FileReference fileReference)
+			{
 				SelectFile(fileReference);
+
+				if (_playlistTouchDragTimer == null)
+				{
+					_playlistTouchDragTimer = new Timer();
+					_playlistTouchDragTimer.Interval = 800;
+					_playlistTouchDragTimer.Elapsed += _playlistTouchDragTimer_Elapsed;
+				}
+
+				_playlistTouchDragTimer.Stop();
+				lstPlaylist.SetValue(ScrollViewer.PanningModeProperty, PanningMode.None);
+				_playlistTouchDragTimer.Start();
+			}
+		}
+
+		private void _playlistTouchDragTimer_Elapsed(object sender, ElapsedEventArgs e)
+		{
+			_playlistTouchDragTimer.Stop();
+
+			UI(() =>
+			{
+				lstPlaylist.SetValue(ScrollViewer.PanningModeProperty, PanningMode.Both);
+			});
+		}
+
+		Timer _playlistTouchDragTimer;
+
+		private void lstPlaylist_ManipulationBoundaryFeedback(object sender, ManipulationBoundaryFeedbackEventArgs e)
+		{
+			// By default, when you touch pan to the end of the scrollable area, the whole window moves around. I think this looks ugly for this app!
+			e.Handled = true;
 		}
 
 		private void cmdClearPlaylist_Click(object sender, RoutedEventArgs e)
@@ -583,6 +614,38 @@ namespace MusicBox
 			}
 
 			return components.ToArray();
+		}
+
+		private void tvLibrarySearchResults_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
+		{
+			if (_libraryTouchDragTimer == null)
+			{
+				_libraryTouchDragTimer = new Timer();
+				_libraryTouchDragTimer.Interval = 800;
+				_libraryTouchDragTimer.Elapsed += _libraryTouchDragTimer_Elapsed;
+			}
+
+			_libraryTouchDragTimer.Stop();
+			tvLibrarySearchResults.SetValue(ScrollViewer.PanningModeProperty, PanningMode.None);
+			_libraryTouchDragTimer.Start();
+		}
+
+		private void _libraryTouchDragTimer_Elapsed(object sender, ElapsedEventArgs e)
+		{
+			_libraryTouchDragTimer.Stop();
+
+			UI(() =>
+			{
+				tvLibrarySearchResults.SetValue(ScrollViewer.PanningModeProperty, PanningMode.Both);
+			});
+		}
+
+		Timer _libraryTouchDragTimer;
+
+		private void tvLibrarySearchResults_ManipulationBoundaryFeedback(object sender, ManipulationBoundaryFeedbackEventArgs e)
+		{
+			// By default, when you touch pan to the end of the scrollable area, the whole window moves around. I think this looks ugly for this app!
+			e.Handled = true;
 		}
 
 		void UI(Action action)

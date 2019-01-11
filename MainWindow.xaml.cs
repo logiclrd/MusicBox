@@ -24,11 +24,16 @@ namespace MusicBox
 	{
 		public MainWindow()
 		{
-			_libraryPath = ConfigurationManager.AppSettings["LibraryPath"];
-			_playlistPath = ConfigurationManager.AppSettings["PlaylistPath"];
+			string basePath = AppDomain.CurrentDomain.BaseDirectory;
+
+			_libraryPath = Path.Combine(basePath, ConfigurationManager.AppSettings["LibraryPath"]);
+			_playlistPath = Path.Combine(basePath, ConfigurationManager.AppSettings["PlaylistPath"]);
 
 			EnsureDirectory(_libraryPath, "find music");
 			EnsureDirectory(_playlistPath, "store dance lists");
+
+			_libraryPath = Path.GetFullPath(_libraryPath);
+			_playlistPath = Path.GetFullPath(_playlistPath);
 
 			InitializeComponent();
 

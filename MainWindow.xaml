@@ -201,7 +201,7 @@
                     <Label FontSize="24" Foreground="#DCA">Dance list:</Label>
 
                     <StackPanel HorizontalAlignment="Right" Orientation="Horizontal">
-                        <Button Name="cmdClearPlaylist" Click="cmdClearPlaylist_Click">
+                        <Button Name="cmdClearPlaylist" Click="cmdClearPlaylist_Click" AllowDrop="True" DragOver="cmdClearPlaylist_DragOver" Drop="cmdClearPlaylist_Drop">
                             <Button.Template>
                                 <ControlTemplate TargetType="Button">
                                     <Grid>

@@ -13,6 +13,8 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
 
+using GongSolutions.Wpf.DragDrop;
+
 namespace MusicBox
 {
 	/// <summary>
@@ -84,6 +86,27 @@ namespace MusicBox
 			_library = new Library(_libraryPath);
 
 			UpdateLibrarySearch();
+
+			tvLibrarySearchResults.SetValue(GongSolutions.Wpf.DragDrop.DragDrop.DragHandlerProperty, new SetAllowDrop(cmdClearPlaylist, false));
+			lstPlaylist.SetValue(GongSolutions.Wpf.DragDrop.DragDrop.DragHandlerProperty, new SetAllowDrop(cmdClearPlaylist, true));
+		}
+
+		class SetAllowDrop : DefaultDragHandler
+		{
+			UIElement _targetElement;
+			bool _allowDrop;
+
+			public SetAllowDrop(UIElement targetElement, bool allowDrop)
+			{
+				_targetElement = targetElement;
+				_allowDrop = allowDrop;
+			}
+
+			public override void StartDrag(IDragInfo dragInfo)
+			{
+				_targetElement.AllowDrop = _allowDrop;
+				base.StartDrag(dragInfo);
+			}
 		}
 
 		void EnsureDirectory(string path, string usage)
@@ -335,6 +358,39 @@ namespace MusicBox
 			this.Playlist.Clear();
 
 			_playlistFile = null;
+		}
+
+		private void cmdClearPlaylist_DragOver(object sender, DragEventArgs e)
+		{
+			e.Effects = DragDropEffects.None;
+
+			string dataFormat = GongSolutions.Wpf.DragDrop.DragDrop.DataFormat.Name;
+
+			if (!e.Data.GetDataPresent(dataFormat))
+				return;
+
+			if ((e.Data.GetData(dataFormat) is FileReference fileReference)
+			 && Playlist.Contains(fileReference))
+				e.Effects = DragDropEffects.Move;
+		}
+
+		private void cmdClearPlaylist_Drop(object sender, DragEventArgs e)
+		{
+			string dataFormat = GongSolutions.Wpf.DragDrop.DragDrop.DataFormat.Name;
+
+			if (!e.Data.GetDataPresent(dataFormat))
+				return;
+
+			if (e.Data.GetData(dataFormat) is FileReference fileReference)
+			{
+				if (ReferenceEquals(lstPlaylist.SelectedItem, fileReference)
+				 && (lstPlaylist.SelectedIndex >= 0)
+				 && (lstPlaylist.SelectedIndex < Playlist.Count)
+				 && ReferenceEquals(Playlist[lstPlaylist.SelectedIndex], fileReference))
+					Playlist.RemoveAt(lstPlaylist.SelectedIndex);
+				else
+					Playlist.Remove(fileReference);
+			}
 		}
 
 		private void cmdSavePlaylist_Click(object sender, RoutedEventArgs e)

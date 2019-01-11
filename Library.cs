@@ -92,7 +92,7 @@ namespace MusicBox
 							{
 								queueEntry.FileReference.Title = file.Tag.Title;
 								queueEntry.FileReference.TitleIsFileName = false;
-								queueEntry.FileReference.SortKey = Path.Combine(Path.GetDirectoryName(queueEntry.FileReference.RelativePath), file.Tag.Title);
+								queueEntry.FileReference.SortKey = Path.GetDirectoryName(queueEntry.FileReference.RelativePath) + "\\" + file.Tag.Title;
 							}));
 					}
 				}

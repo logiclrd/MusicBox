@@ -486,12 +486,19 @@ namespace MusicBox
 			UpdateLibrarySearch();
 		}
 
+		string _lastSearchText;
+
 		void UpdateLibrarySearch()
 		{
 			string searchText = txtLibrarySearch.Text.Trim();
 
 			if (searchText.Length < 3)
 				searchText = "";
+
+			if (searchText == _lastSearchText)
+				return;
+
+			_lastSearchText = searchText;
 
 			bool isEmptySearch = string.IsNullOrWhiteSpace(searchText);
 

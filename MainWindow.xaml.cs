@@ -490,6 +490,9 @@ namespace MusicBox
 		{
 			string searchText = txtLibrarySearch.Text.Trim();
 
+			if (searchText.Length < 3)
+				searchText = "";
+
 			bool isEmptySearch = string.IsNullOrWhiteSpace(searchText);
 
 			var rootNodes = new List<SearchResultNode>();

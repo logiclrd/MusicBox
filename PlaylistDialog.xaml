@@ -28,7 +28,7 @@
                 </ListBox.Resources>
                 <ListBox.ItemTemplate>
                     <DataTemplate DataType="{x:Type local:FileReference}">
-                        <TextBlock FontSize="24"  Text="{Binding FileName}" />
+                        <TextBlock FontSize="24" Text="{Binding Title}" />
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>

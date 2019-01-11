@@ -35,7 +35,7 @@ namespace MusicBox
 		{
 			_playlistsModel = new ObservableCollection<FileReference>();
 
-			foreach (var file in playlists.OrderBy(p => p.FileName, StringComparer.InvariantCultureIgnoreCase))
+			foreach (var file in playlists.OrderBy(p => p.Title, StringComparer.OrdinalIgnoreCase))
 				_playlistsModel.Add(file);
 
 			lstPlaylists.ItemsSource = _playlistsModel;
@@ -51,14 +51,14 @@ namespace MusicBox
 			{
 				if (value != null)
 				{
-					txtPlaylistName.Text = value.FileName;
+					txtPlaylistName.Text = value.Title;
 
 					foreach (var file in _playlistsModel.OfType<FileReference>())
-						if (file.FileName == value.FileName)
+						if (file.Title == value.Title)
 						{
 							_playlistFile = file;
 							lstPlaylists.SelectedItem = file;
-							txtPlaylistName.Text = file.FileName;
+							txtPlaylistName.Text = file.Title;
 
 							break;
 						}
@@ -73,7 +73,7 @@ namespace MusicBox
 			_playlistFile = null;
 
 			foreach (var file in _playlistsModel)
-				if (file.FileName.Equals(txtPlaylistName.Text, StringComparison.InvariantCultureIgnoreCase))
+				if (file.Title.Equals(txtPlaylistName.Text, StringComparison.OrdinalIgnoreCase))
 				{
 					_playlistFile = file;
 					break;
@@ -84,7 +84,7 @@ namespace MusicBox
 				_playlistFile =
 					new FileReference()
 					{
-						FileName = txtPlaylistName.Text
+						Title = txtPlaylistName.Text
 					};
 			}
 
@@ -104,7 +104,7 @@ namespace MusicBox
 			{
 				var confirmDialog = new ConfirmDialog();
 
-				confirmDialog.Prompt = "Permanently delete the dance list '" + _playlistFile.FileName + "'? There is no undo available.";
+				confirmDialog.Prompt = "Permanently delete the dance list '" + _playlistFile.Title + "'? There is no undo available.";
 				confirmDialog.Owner = this;
 
 				bool? result;

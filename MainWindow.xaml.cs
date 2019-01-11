@@ -8,11 +8,10 @@ using System.Text;
 using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media.Animation;
-
-using Microsoft.Win32;
 
 namespace MusicBox
 {
@@ -187,13 +186,18 @@ namespace MusicBox
 			Application.Current.Shutdown();
 		}
 
-		void SelectFile(string fileName)
+		void SelectFile(FileReference file)
 		{
-			_player.SelectFile(fileName);
+			_player.SelectFile(file.FullPath);
 
-			string title = Path.GetFileNameWithoutExtension(fileName);
+			lblTitle.SetBinding(
+				Label.ContentProperty,
+				new Binding()
+				{
+					Source = file,
+					Path = new PropertyPath(FileReference.TitleProperty),
+				});
 
-			lblTitle.Content = title;
 			lblTitle.FontStyle = FontStyles.Normal;
 
 			svScrollTitle.ScrollToLeftEnd();
@@ -256,22 +260,6 @@ namespace MusicBox
 			set { SetValue(TitleScrollOffsetProperty, value); }
 		}
 
-		private void cmdOpen_Click(object sender, RoutedEventArgs e)
-		{
-			var dialog = new OpenFileDialog();
-
-			dialog.CheckFileExists = true;
-			dialog.DereferenceLinks = true;
-			dialog.Filter = "Audio Files (*.wav, *.mp3)|*.wav;*.mp3|All files (*.*)|*.*";
-			dialog.Multiselect = false;
-			dialog.Title = "Select Audio File";
-
-			bool? result = dialog.ShowDialog(this);
-
-			if (result ?? false)
-				SelectFile(dialog.FileName);
-		}
-
 		private void cmdPlay_Click(object sender, RoutedEventArgs e)
 		{
 			if (_player.Playing)
@@ -308,7 +296,7 @@ namespace MusicBox
 		private void lstPlaylist_SelectionChanged(object sender, SelectionChangedEventArgs e)
 		{
 			if (lstPlaylist.SelectedItem is FileReference fileReference)
-				SelectFile(fileReference.FullPath);
+				SelectFile(fileReference);
 		}
 
 		private void cmdClearPlaylist_Click(object sender, RoutedEventArgs e)
@@ -346,7 +334,7 @@ namespace MusicBox
 
 				if (_playlistFile.FullPath == null)
 				{
-					var sanitizedName = SanitizeFileName(_playlistFile.FileName);
+					var sanitizedName = SanitizeFileName(_playlistFile.Title);
 
 					if (sanitizedName.Length == 0)
 						sanitizedName = "Playlist";
@@ -362,7 +350,7 @@ namespace MusicBox
 					}
 				}
 
-				this.Playlist.Name = _playlistFile.FileName;
+				this.Playlist.Name = _playlistFile.Title;
 				this.Playlist.Save(_playlistFile);
 			}
 		}
@@ -414,7 +402,7 @@ namespace MusicBox
 				"COM0", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9",
 				"LPT0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9",
 			},
-			StringComparer.InvariantCultureIgnoreCase);
+			StringComparer.OrdinalIgnoreCase);
 
 		private void cboSavedPlaylists_DropDownOpened(object sender, EventArgs e)
 		{
@@ -422,10 +410,10 @@ namespace MusicBox
 
 			List<FileReference> playlists = Playlist.Enumerate(playlistDirectory).ToList();
 
-			playlists.Sort((l, r) => string.Compare(l.FileName, r.FileName, StringComparison.InvariantCultureIgnoreCase));
+			playlists.Sort((l, r) => string.Compare(l.Title, r.Title, StringComparison.OrdinalIgnoreCase));
 
 			if (playlists.Count == 0)
-				playlists.Add(new FileReference() { FileName = "No saved dance lists." });
+				playlists.Add(new FileReference() { Title = "No saved dance lists." });
 
 			cboSavedPlaylists.SelectedIndex = -1;
 			cboSavedPlaylists.ItemsSource = playlists;
@@ -519,7 +507,15 @@ namespace MusicBox
 						var node = new SearchResultNode();
 
 						if (i + 1 == result.Components.Count)
+						{
 							node.SearchResult = result;
+
+							result.ComponentsChanged +=
+								(sender, e) =>
+								{
+									node.Heading = CreateTextBlockForSearchResultComponent(result.Components.Last());
+								};
+						}
 
 						node.NodeType = (i + 1 < result.Components.Count) ? SearchResultNodeType.Folder : SearchResultNodeType.File;
 						node.Heading = CreateTextBlockForSearchResultComponent(result.Components[i]);

@@ -263,7 +263,7 @@
                             </ComboBox.ItemContainerStyle>
                             <ComboBox.ItemTemplate>
                                 <DataTemplate DataType="{x:Type local:FileReference}">
-                                    <TextBlock FontSize="24"  Text="{Binding FileName}" />
+                                    <TextBlock FontSize="24" Text="{Binding Title}" />
                                 </DataTemplate>
                             </ComboBox.ItemTemplate>
                             <ComboBox.Resources>
@@ -404,7 +404,7 @@
                             <DataTemplate DataType="{x:Type local:FileReference}">
                                 <StackPanel Orientation="Horizontal" ToolTip="{Binding RelativePath}">
                                     <local:SearchResultNodeIcon NodeType="File" Margin="0 0 8 0" />
-                                    <ContentPresenter Content="{Binding FileName}" RecognizesAccessKey="false" />
+                                    <ContentPresenter Content="{Binding Title}" RecognizesAccessKey="false" />
                                 </StackPanel>
                             </DataTemplate>
                         </ListBox.ItemTemplate>

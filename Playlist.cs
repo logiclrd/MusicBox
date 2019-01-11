@@ -80,7 +80,7 @@ namespace MusicBox
 				yield return
 					new FileReference()
 					{
-						FileName = playlist.Name,
+						Title = playlist.Name,
 						FullPath = filePath,
 					};
 			}
@@ -107,12 +107,6 @@ namespace MusicBox
 			{
 				foreach (var searchResult in CollectSearchResults(searchResultNode))
 				{
-					var newFileReference = new FileReference();
-
-					newFileReference.FileName = searchResult.Components.Last().Name;
-					newFileReference.RelativePath = searchResult.RelativePath;
-					newFileReference.FullPath = searchResult.FullPath;
-
 					int insertionIndex;
 
 					if (dropInfo.TargetItem is FileReference insertionPoint)
@@ -125,7 +119,7 @@ namespace MusicBox
 					else
 						insertionIndex = this.Count;
 
-					this.Insert(insertionIndex, newFileReference);
+					this.Insert(insertionIndex, searchResult.FileReference);
 				}
 			}
 
@@ -133,8 +127,6 @@ namespace MusicBox
 			{
 				if (this.Contains(fileReference))
 					this.Remove(fileReference);
-				else
-					fileReference = fileReference.Clone();
 
 				int insertionIndex;
 

@@ -1,22 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace MusicBox
 {
-	public class FileReference : DependencyObject
+	public class FileReference : DependencyObject, IComparable<FileReference>
 	{
-		public static readonly DependencyProperty FileNameProperty = DependencyProperty.Register(nameof(FileName), typeof(string), typeof(FileReference));
+		public static readonly DependencyProperty TitleProperty = DependencyProperty.Register(nameof(Title), typeof(string), typeof(FileReference));
+		public static readonly DependencyProperty TitleIsFileNameProperty = DependencyProperty.Register(nameof(TitleIsFileName), typeof(bool), typeof(FileReference));
 		public static readonly DependencyProperty RelativePathProperty = DependencyProperty.Register(nameof(RelativePath), typeof(string), typeof(FileReference));
 		public static readonly DependencyProperty FullPathProperty = DependencyProperty.Register(nameof(FullPath), typeof(string), typeof(FileReference));
+		public static readonly DependencyProperty SortKeyProperty = DependencyProperty.Register(nameof(SortKey), typeof(string), typeof(FileReference), new PropertyMetadata(FileReference_SortKeyChanged));
 
-		public string FileName
+		private static void FileReference_SortKeyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
 		{
-			get { return (string)GetValue(FileNameProperty); }
-			set { SetValue(FileNameProperty, value); }
+			if (d is FileReference fileReference)
+				fileReference.SortKeyChanged?.Invoke(fileReference, new SortKeyChangedEventArgs((string)e.OldValue, (string)e.NewValue));
+		}
+
+		public event SortKeyChangedEventHandler SortKeyChanged;
+
+		public string Title
+		{
+			get { return (string)GetValue(TitleProperty); }
+			set { SetValue(TitleProperty, value); }
+		}
+
+		public bool TitleIsFileName
+		{
+			get { return (bool)GetValue(TitleIsFileNameProperty); }
+			set { SetValue(TitleIsFileNameProperty, value); }
 		}
 
 		public string RelativePath
@@ -31,15 +43,15 @@ namespace MusicBox
 			set { SetValue(FullPathProperty, value); }
 		}
 
-		public FileReference Clone()
+		public string SortKey
 		{
-			return
-				new FileReference()
-				{
-					FileName = this.FileName,
-					RelativePath = this.RelativePath,
-					FullPath = this.FullPath,
-				};
+			get { return (string)GetValue(SortKeyProperty); }
+			set { SetValue(SortKeyProperty, value); }
+		}
+
+		public int CompareTo(FileReference other)
+		{
+			return string.Compare(this.SortKey, other.SortKey, StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }

@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
+using System.Windows.Threading;
 
 namespace MusicBox
 {
@@ -11,46 +11,93 @@ namespace MusicBox
 	{
 		string _path;
 		FileSystemWatcher _watcher;
-		object _sync;
-		List<string> _items;
+		SortedFileReferenceList _items;
+		Dispatcher _dispatcher;
 
 		public Library(string path)
 		{
 			_path = path;
+			_dispatcher = Dispatcher.CurrentDispatcher;
 
-			_sync = new object();
+			_resolveFileTitleQueue = new ActionBlock<QueueEntry>(new Action<QueueEntry>(ResolveFileTitle));
 
-			lock (_sync)
+			_watcher = new FileSystemWatcher(path);
+			_watcher.IncludeSubdirectories = true;
+			_watcher.Created += _watcher_Created;
+			_watcher.Renamed += _watcher_Renamed;
+			_watcher.Deleted += _watcher_Deleted;
+			_watcher.EnableRaisingEvents = true;
+
+			_items = new SortedFileReferenceList(EnumerateFiles(path, ""));
+		}
+
+		class QueueEntry
+		{
+			public string FullPath;
+			public FileReference FileReference;
+
+			public QueueEntry(FileReference fileReference)
 			{
-				_watcher = new FileSystemWatcher(path);
-				_watcher.IncludeSubdirectories = true;
-				_watcher.Created += _watcher_Created;
-				_watcher.Renamed += _watcher_Renamed;
-				_watcher.Deleted += _watcher_Deleted;
-				_watcher.EnableRaisingEvents = true;
-
-				_items = new List<string>(EnumerateFiles(path, ""));
-				_items.Sort(StringComparer.InvariantCultureIgnoreCase);
+				this.FullPath = fileReference.FullPath;
+				this.FileReference = fileReference;
 			}
 		}
 
-		IEnumerable<string> EnumerateFiles(string absolutePath, string relativePath)
+		ActionBlock<QueueEntry> _resolveFileTitleQueue;
+
+		IEnumerable<FileReference> EnumerateFiles(string absolutePath, string relativePath)
 		{
 			foreach (var filePath in Directory.GetFiles(absolutePath))
 			{
 				string fileName = Path.GetFileName(filePath);
 
 				if (Player.SupportedExtensions.Contains(Path.GetExtension(fileName)))
-					yield return Path.Combine(relativePath, fileName);
+					yield return CreateFileReference(fileName, filePath, Path.Combine(relativePath, fileName));
 			}
 
 			foreach (var subdirectoryPath in Directory.GetDirectories(absolutePath))
 			{
 				string directoryName = Path.GetFileName(subdirectoryPath);
 
-				foreach (var path in EnumerateFiles(subdirectoryPath, Path.Combine(relativePath, directoryName)))
-					yield return path;
+				foreach (var item in EnumerateFiles(subdirectoryPath, Path.Combine(relativePath, directoryName)))
+					yield return item;
 			}
+		}
+
+		FileReference CreateFileReference(string fileName, string filePath, string relativeFilePath)
+		{
+			var item = new FileReference();
+
+			item.Title = Path.GetFileNameWithoutExtension(fileName);
+			item.TitleIsFileName = true;
+			item.FullPath = filePath;
+			item.RelativePath = relativeFilePath;
+			item.SortKey = Path.Combine(Path.GetDirectoryName(relativeFilePath), item.Title);
+
+			_resolveFileTitleQueue.Post(new QueueEntry(item));
+
+			return item;
+		}
+
+		void ResolveFileTitle(QueueEntry queueEntry)
+		{
+			try
+			{
+				using (var file = TagLib.File.Create(queueEntry.FullPath))
+				{
+					if ((file.Tag != null) && !string.IsNullOrWhiteSpace(file.Tag.Title))
+					{
+						_dispatcher.BeginInvoke((Action)(
+							() =>
+							{
+								queueEntry.FileReference.Title = file.Tag.Title;
+								queueEntry.FileReference.TitleIsFileName = false;
+								queueEntry.FileReference.SortKey = Path.Combine(Path.GetDirectoryName(queueEntry.FileReference.RelativePath), file.Tag.Title);
+							}));
+					}
+				}
+			}
+			catch { }
 		}
 
 		string GetRelativePath(string fullPath)
@@ -73,79 +120,81 @@ namespace MusicBox
 
 		void AddPath(string fullPath)
 		{
+			string fileName = Path.GetFileName(fullPath);
 			string relativePath = GetRelativePath(fullPath);
 
-			int index = _items.BinarySearch(relativePath, StringComparer.InvariantCultureIgnoreCase);
-
-			if (index < 0)
-				_items.Insert(~index, relativePath);
+			_items.Add(CreateFileReference(fileName, fullPath, relativePath));
 		}
 
 		void RemovePath(string fullPath)
 		{
-			string relativePath = GetRelativePath(fullPath);
-
-			int index = _items.BinarySearch(relativePath, StringComparer.InvariantCultureIgnoreCase);
-
-			if (index >= 0)
-				_items.RemoveAt(index);
+			for (int i = 0; i < _items.Count; i++)
+				if (_items[i].FullPath == fullPath)
+				{
+					_items.RemoveAt(i);
+					break;
+				}
 		}
 
 		private void _watcher_Created(object sender, FileSystemEventArgs e)
 		{
-			lock (_sync)
-				AddPath(e.FullPath);
+			_dispatcher.Invoke(
+				() =>
+				{
+					AddPath(e.FullPath);
+				});
 		}
 
 		private void _watcher_Renamed(object sender, RenamedEventArgs e)
 		{
-			lock (_sync)
-			{
-				RemovePath(e.OldFullPath);
-				AddPath(e.FullPath);
-			}
+			_dispatcher.Invoke(
+				() =>
+				{
+					RemovePath(e.OldFullPath);
+					AddPath(e.FullPath);
+				});
 		}
 
 		private void _watcher_Deleted(object sender, FileSystemEventArgs e)
 		{
-			lock (_sync)
-				RemovePath(e.FullPath);
+			_dispatcher.Invoke(
+				() =>
+				{
+					RemovePath(e.FullPath);
+				});
 		}
 
 		public IEnumerable<SearchResult> Search(string substring)
 		{
+			if (!_dispatcher.CheckAccess())
+			{
+				IEnumerable<SearchResult> dispatchedResults = null;
+
+				_dispatcher.Invoke(
+					() =>
+					{
+						dispatchedResults = Search(substring);
+					});
+
+				return dispatchedResults;
+			}
+
 			var results = new List<SearchResult>();
 
-			lock (_sync)
+			foreach (var item in _items)
 			{
-				foreach (var item in _items)
-				{
-					string renderText = item;
+				string renderText = item.SortKey;
 
-					int offset = (substring.Length == 0) ? -1 : renderText.IndexOf(substring, StringComparison.InvariantCultureIgnoreCase);
+				int offset = (substring.Length == 0) ? -1 : renderText.IndexOf(substring, StringComparison.OrdinalIgnoreCase);
 
-					if ((offset < 0) && (substring.Length > 0))
-						continue;
+				if ((offset < 0) && (substring.Length > 0))
+					continue;
 
-					var result = new SearchResult();
+				var result = new SearchResult(item, substring);
 
-					while (offset >= 0)
-					{
-						result.AddSegment(renderText.Substring(0, offset), highlight: false);
-						result.AddSegment(renderText.Substring(offset, substring.Length), highlight: true);
+				result.RecomputeComponents();
 
-						renderText = renderText.Substring(offset + substring.Length);
-						offset = renderText.IndexOf(substring, StringComparison.InvariantCultureIgnoreCase);
-					}
-
-					if (renderText.Length > 0)
-						result.AddSegment(renderText, highlight: false);
-
-					result.RelativePath = item;
-					result.FullPath = Path.Combine(_path, item);
-
-					results.Add(result);
-				}
+				results.Add(result);
 			}
 
 			return results;

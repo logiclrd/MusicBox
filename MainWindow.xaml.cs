@@ -44,6 +44,12 @@ namespace MusicBox
 
 			_player = new Player();
 
+			_player.InvalidFileChanged +=
+				(sender, e) =>
+				{
+					grdUnreadableFile.Visibility = _player.InvalidFile ? Visibility.Visible : Visibility.Collapsed;
+				};
+
 			_player.PlayingChanged +=
 				(sender, e) =>
 				{

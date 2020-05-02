@@ -13,6 +13,9 @@ namespace MusicBox
 
 		public void SelectFile(string fileName)
 		{
+			InvalidFile = false;
+			InvalidFileChanged?.Invoke(this, EventArgs.Empty);
+
 			if (Playing)
 				Stop();
 
@@ -20,12 +23,22 @@ namespace MusicBox
 
 			string extension = Path.GetExtension(fileName).ToLower();
 
-			if (extension == ".mp3")
-				_source = new Mp3FileReader(fileName);
-			else if (extension == ".wav")
-				_source = new WaveFileReader(fileName);
-			else if ((extension == ".fla") || (extension == ".flac"))
-				_source = new FlacReader(fileName);
+			try
+			{
+				if (extension == ".mp3")
+					_source = new Mp3FileReader(fileName);
+				else if (extension == ".wav")
+					_source = new WaveFileReader(fileName);
+				else if ((extension == ".fla") || (extension == ".flac"))
+					_source = new FlacReader(fileName);
+			}
+			catch
+			{
+				InvalidFile = true;
+				InvalidFileChanged?.Invoke(this, EventArgs.Empty);
+
+				_source = null;
+			}
 
 			TotalTimeChanged?.Invoke(this, EventArgs.Empty);
 
@@ -78,6 +91,8 @@ namespace MusicBox
 			PlayingChanged?.Invoke(this, EventArgs.Empty);
 		}
 
+		public bool InvalidFile { get; private set; }
+
 		public bool Playing { get; private set; }
 
 		public TimeSpan TotalTime
@@ -109,6 +124,7 @@ namespace MusicBox
 			}
 		}
 
+		public event EventHandler InvalidFileChanged;
 		public event EventHandler PlayingChanged;
 		public event EventHandler ReachedEnd;
 		public event EventHandler TotalTimeChanged;

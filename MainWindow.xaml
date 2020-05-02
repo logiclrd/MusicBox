@@ -182,6 +182,13 @@
                     </StackPanel>
                 </Grid>
 
+                <Grid Grid.Row="2" Grid.Column="0" Grid.RowSpan="3" Name="grdUnreadableFile" Margin="-12" Visibility="Collapsed">
+                    <Rectangle Fill="White" Opacity="0.4" />
+                    <Label HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="48">
+                        This file cannot be read.
+                    </Label>
+                </Grid>
+
                 <Grid Grid.Row="6">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="0*" />
